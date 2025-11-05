@@ -1,0 +1,40 @@
+// HeteroGAT Model Architecture for OGBN-MAG
+digraph {
+	graph [rankdir=LR splines=ortho]
+	compound=true
+	node [fontname=Helvetica shape=box style=filled]
+	edge [arrowhead=vee]
+	subgraph cluster_input {
+		color=blue label="Input Features & Embeddings" style=rounded
+		input_proj_layer [label="Input Projection / Embedding
+(In-Dim -> 256)" fillcolor=lightgreen shape=box]
+		input_author [label="Author Features
+(X_author)" fillcolor=bisque]
+		input_author -> input_proj_layer
+		input_field_of_study [label="Field_of_study Features
+(X_field_of_study)" fillcolor=bisque]
+		input_field_of_study -> input_proj_layer
+		input_institution [label="Institution Features
+(X_institution)" fillcolor=bisque]
+		input_institution -> input_proj_layer
+		input_paper [label="Paper Features
+(X_paper)" fillcolor=palegreen]
+		input_paper -> input_proj_layer
+	}
+	hetero_conv1 [label="HeteroConv Layer 1
+(GATConv: 256 -> 256 via 4 Heads)" fillcolor=lightyellow shape=box]
+	input_proj_layer -> hetero_conv1 [label=h_ntype]
+	input_proj_layer -> hetero_conv1 [label="Edge Index Dict (8 types)" dir=none fontsize=10 style=dashed]
+	hetero_conv2 [label="HeteroConv Layer 2
+(GATConv: 256 -> 256 via 4 Heads)" fillcolor=lightyellow shape=box]
+	hetero_conv1 -> hetero_conv2 [label="h'_ntype"]
+	hetero_conv1 -> hetero_conv2 [label="Edge Index Dict" dir=none fontsize=10 style=dashed]
+	output_paper_embedding [label="Final Paper Embeddings
+(h_paper_final)" fillcolor=lightcoral shape=box]
+	hetero_conv2 -> output_paper_embedding [label="Extract h_paper"]
+	classifier [label="Classifier (Linear)
+(256 -> 349 classes)" fillcolor=orange shape=box]
+	output_paper_embedding -> classifier [label=h_paper_final]
+	output_logits [label="Logits (Paper Classification)" fillcolor=white shape=ellipse]
+	classifier -> output_logits [label="Loss: Cross-Entropy"]
+}
